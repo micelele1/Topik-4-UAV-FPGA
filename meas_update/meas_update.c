@@ -308,7 +308,8 @@ bool apply_delayed_gnss_update(
     float meas_timestamp_ms,
     float gnss_x, float gnss_y, float gnss_z,
     float R_gnss_xy, float R_gnss_z,
-    bool data_valid
+    bool data_valid,
+    float* nis_x_out
 ) {
     if (!data_valid || buf->count == 0) {
         return false;
@@ -516,6 +517,9 @@ int main() {
             x[5] = 0.5f;
             x[6] = gt_yaw;
         }
+        
+        float nis_baro = 1.0f;
+        float nis_gnss_x = -1.0f;
 
         // 1. Log current state & IMU input to ring buffer, then propagate forward
         buffer_push(&delay_buf, t_ms, x, U, D, ax, ay, az, wz, dt);
@@ -532,7 +536,7 @@ int main() {
             gnss_applied = apply_delayed_gnss_update(
                 &delay_buf, x, U, D,
                 gnss_ts_ms, gnss_x, gnss_y, gnss_z,
-                R_gnss_xy, R_gnss_z, true
+                R_gnss_xy, R_gnss_z, true, &nis_gnss_x
             );
             if (gnss_applied) gnss_accepted_count++;
         }
